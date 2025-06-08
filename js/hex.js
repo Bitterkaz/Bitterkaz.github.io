@@ -19,10 +19,27 @@ data.forEach(function(d, i) {
 // Math.seedrandom(+d3.timeHour(new Date));
  // Compress the y-coordinates to create perspective
 // console.log(d3.shuffle(data))
+// data = data.filter(function(d) { return !(typeof d.text === "string" && d.text.trim() !== ""); })
+// data = data.sort((a, b) => (b.important === "TRUE") - (a.important === "TRUE"));
+// console.log(data);
+// data= data.filter(function(d) {return d.important === "TRUE";})
+let falseData = data.filter(d => d.important !== "TRUE");
+falseData = d3.shuffle(falseData);
 
-data = d3.shuffle(data);
+let trueData = data.filter(d => d.important === "TRUE");
+trueData = d3.shuffle(trueData);
+// Inject trueData into the middle of falseData
+let mid = Math.floor(falseData.length / 2);
+data = [
+  ...falseData.slice(0, mid),
+  ...trueData,
+  ...falseData.slice(mid)
+];
 
-var height = 1000,
+// data = d3.shuffle(data);
+// console.log(data);
+
+var height = 800,
     imageWidth = 170,
     imageHeight = 170,
     radius = 45,
@@ -41,9 +58,6 @@ var style = document.body.style,
 
 var hex = d3.hexbin()
   .radius(radius)
- 
-
-
 
 if (!("ontouchstart" in document)) d3.select("#examples")
     .on("mousemove", (event) => {
@@ -102,9 +116,22 @@ function resized() {
   var deepWidth = innerWidth * (depth + 1) / depth,
       deepHeight = height * (depth + 1) / depth,
       centers = hex.size([deepWidth, deepHeight]).centers();
-
+  console.log("Number of drawn centers:", centers.length);
   desiredFocus = [innerWidth / 2, height / 2];
   moved();
+  // Calculate the center of the grid
+const gridCenter = [deepWidth / 2, deepHeight / 2];
+
+const maxDist = Math.max(
+    ...centers.map(c => Math.hypot(c[0] - gridCenter[0], c[1] - gridCenter[1]))
+  );
+
+// Sort centers by distance to the center
+centers.sort((a, b) => {
+  const da = Math.hypot(a[0] - gridCenter[0], a[1] - gridCenter[1]);
+  const db = Math.hypot(b[0] - gridCenter[0], b[1] - gridCenter[1]);
+  return da - db;
+});
 
   graphic
       .style("left", Math.round((innerWidth - deepWidth) / 2) + "px")
@@ -122,6 +149,23 @@ function resized() {
     drawImage(center.example = data[dataIndex]);
     context.restore();
   });
+
+  const allData = [...trueData, ...falseData];
+
+// Assign data to centers
+centers.forEach((center, i) => {
+  if (i < allData.length) {
+    center.example = allData[i];
+    context.save();
+    context.translate(Math.round(center[0]), Math.round(center[1]));
+    drawImage(center.example);
+    const dist = Math.hypot(center[0] - gridCenter[0], center[1] - gridCenter[1]);
+    center.opacity = 0.2 + 0.8 * (1 - dist / maxDist);   console.log(`Center ${i} at (${center[0]}, ${center[1]}) has opacity ${center.opacity}`);
+    context.restore();
+    
+  }
+});
+  
 
   mesh.attr("d", hex.mesh);
 
@@ -159,7 +203,8 @@ function resized() {
       .attr("clip-path", "url(#hex-clip)");
 
   anchor = anchorEnter.merge(anchor)
-      .attr("transform", function(d) { return "translate(" + d + ")"; });
+      .attr("transform", function(d) { return "translate(" + d + ")"; })
+      //  .style("opacity", function(d) { return d.opacity; });
 }
 
 function mousemoved(event) {
@@ -189,11 +234,11 @@ searchBar.on("input", function() {
   var query = this.value.toLowerCase();
 
   anchor.style("opacity", function(d) {
-    return d.example.search.toLowerCase().includes(query) ? 1 : 0.2;
+    return d.example.text.toLowerCase().includes(query) ? 1 : 0.2;
   });
 
   anchor.selectAll("path, image").style("pointer-events", function(d) {
-    return d.example.search.toLowerCase().includes(query) ? "auto" : "none";
+    return d.example.text.toLowerCase().includes(query) ? "auto" : "none";
   });
 
 });
@@ -237,11 +282,99 @@ anchor.on("click", function(event, d) {
     .attr("src", d.example.url)
     .style("width", "100%")
     .style("margin-bottom", "10px");
-  tab.append("p")
-    .text(d.example.text)
-    .style("font-size", "16px")
-    .style("color", "#333");
-    // Add badges for genre and search
+  // Make the text editable
+//   let editableText = tab.append("textarea")
+//     .text(d.example.text)
+//     .style("width", "100%")
+//     .style("height", "100px")
+//     .style("font-size", "16px")
+//     .style("color", "#333")
+//     .style("border", "1px solid #ccc")
+//     .style("border-radius", "4px")
+//     .style("padding", "10px")
+//     .style("resize", "none");
+//   let importantCheck = tab.append("div")
+//     .style("margin-top", "10px")
+//     .style("display", "flex")
+//     .style("align-items", "center");
+
+// importantCheck.append("input")
+//     .attr("type", "checkbox")
+//     .attr("id", "importantCheck")
+//     .property("checked", d.example.important === "true")
+//     .style("margin-right", "8px");
+
+// importantCheck.append("label")
+//     .attr("for", "importantCheck")
+//     .text("Mark as Important")
+//     .style("color", "#333")
+//     .style("font-size", "14px");
+
+//   // Add a save button
+//   tab.append("button")
+//     .text("Save")
+//     .style("display", "block")
+//     .style("margin-top", "10px")
+//     .style("padding", "10px 20px")
+//     .style("background", "#4CAF50")
+//     .style("color", "white")
+//     .style("border", "none")
+//     .style("border-radius", "4px")
+//     .style("cursor", "pointer")
+//     .on("click", async function() {
+//     // Save both the edited text and important status
+//     d.example.text = editableText.property("value");
+//     d.example.important = d3.select("#importantCheck").property("checked").toString();
+
+//     try {
+//         console.log('Saving:', { 
+//             title: d.example.title, 
+//             text: d.example.text,
+//             important: d.example.important 
+//         });
+        
+//         let response = await fetch('/api/save', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json'
+//             },
+//             body: JSON.stringify({ 
+//                 id: d.example.title, 
+//                 text: d.example.text,
+//                 important: d.example.important
+//             })
+//         });
+        
+//         const result = await response.json();
+//         console.log('Server response:', result);
+        
+//         if (response.ok) {
+//             // Update the hexagon border to reflect importance
+//             d3.select(this.parentNode.parentNode)
+//                 .select(".example-anchor-border")
+//                 .attr("stroke", d.example.important === "true" ? "gold" : (d.example.text ? "purple" : "white"));
+                
+//             alert("Changes saved successfully!");
+//         } else {
+//             throw new Error('Failed to save');
+//         }
+//     } catch (error) {
+//         console.error("Error saving changes:", error);
+//         alert("An error occurred while saving.");
+//     }
+// });   // Add badges for genre and search
+
+  if (d.example.text) {
+      tab.append("span")
+        .text(d.example.text)
+        .style("display", "inline-block")
+        .style("background", "white")
+        .style("color", "black")
+        .style("padding", "5px 10px")
+        .style("margin-right", "5px")
+        .style("border-radius", "4px")
+        .style("font-size", "14px");
+    }
     if (d.example.genre) {
       tab.append("span")
         .text(d.example.genre)
@@ -293,7 +426,7 @@ anchor.on("mouseover", function() {
   this.parentNode.appendChild(this);
 }).on("mouseout", function() {
   d3.select(this).select(".example-anchor-border")
-    .attr("stroke", "white");
+     .attr("stroke", "white")
   // Scale back to normal
   d3.select(this)
     .transition()
