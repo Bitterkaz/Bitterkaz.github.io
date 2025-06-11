@@ -40,8 +40,8 @@ data = [
 // console.log(data);
 
 var height = 800,
-    imageWidth = 170,
-    imageHeight = 170,
+    imageWidth = 140,
+    imageHeight = 140,
     radius = 45,
     depth = 4;
 
