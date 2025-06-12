@@ -283,8 +283,8 @@ centers.forEach((center, i) => {
     .append("path") // White border hexagon
       .attr("d", hex.hexagon())
       .attr("class", "example-anchor-border")
-      .attr("fill", "none")
-      .attr("stroke", "magenta")
+      .style("fill", "#CB57DD")
+      .attr("stroke", "#CB57DD")
       .attr("stroke-width", 4);
 
   anchorEnter
@@ -362,7 +362,7 @@ anchor.on("click", function(event, d) {
       .style("width", "300px")
       .style("max-height", "100%")
       .style("background", "rgba(255,255,255,0.6)")
-      .style("box-shadow", "-2px 0 5px rgba(255, 0, 251, 0.3)")
+      .style("box-shadow", "-2px 0 5px rgba(255, 0, 251, 0.6)")
       .style("overflow", "auto")
       .style("z-index", "1000")
       .style("padding", "20px")
@@ -377,7 +377,7 @@ anchor.on("click", function(event, d) {
     .style("top", "10px")
     .style("right", "10px")
     .style("padding", "5px 10px")
-    .style("background", "#f44336")
+    .style("background", "magenta")
     .style("color", "white")
     .style("border", "none")
     .style("cursor", "pointer")
@@ -521,7 +521,7 @@ anchor.on("click", function(event, d) {
 
 anchor.on("mouseover", function() {
   d3.select(this).select(".example-anchor-border")
-    .attr("stroke", "black");
+    .attr("stroke", "magenta");
   // Scale up the anchor group
   d3.select(this)
     .transition()
@@ -533,7 +533,7 @@ anchor.on("mouseover", function() {
   this.parentNode.appendChild(this);
 }).on("mouseout", function() {
   d3.select(this).select(".example-anchor-border")
-     .attr("stroke", "magenta")
+     .attr("stroke", "#CB57DD")
   // Scale back to normal
   d3.select(this)
     .transition()
