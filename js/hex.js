@@ -8,6 +8,101 @@ var data = Promise.all([d3.csv('js/data.csv')]).then(async function (data) {
   }
 load();
 
+
+class Locutor_TextScramble {
+  constructor(el) {
+    this.el = el;
+    this.chars = "!<>-_\\/[]{}—=+*^?#________";
+    this.update = this.update.bind(this);
+  }
+  setText(newText) {
+    const oldText = this.el.innerText;
+    const length = Math.max(oldText.length, newText.length);
+    const promise = new Promise((resolve) => (this.resolve = resolve));
+    this.queue = [];
+    for (let i = 0; i < length; i++) {
+      const from = oldText[i] || "";
+      const to = newText[i] || "";
+      const start = Math.floor(Math.random() * 40);
+      const end = start + Math.floor(Math.random() * 40);
+      this.queue.push({ from, to, start, end });
+    }
+    cancelAnimationFrame(this.frameRequest);
+    this.frame = 0;
+    this.update();
+    return promise;
+  }
+  update() {
+    let output = "";
+    let complete = 0;
+    for (let i = 0, n = this.queue.length; i < n; i++) {
+      let { from, to, start, end, char } = this.queue[i];
+      if (this.frame >= end) {
+        complete++;
+        output += to;
+      } else if (this.frame >= start) {
+        if (!char || Math.random() < 0.28) {
+          char = this.randomChar();
+          this.queue[i].char = char;
+        }
+        output += `<span class="temp_text">${char}</span>`;
+      } else {
+        output += from;
+      }
+    }
+    this.el.innerHTML = output;
+    if (complete === this.queue.length) {
+      this.resolve();
+    } else {
+      this.frameRequest = requestAnimationFrame(this.update);
+      this.frame++;
+    }
+  }
+  randomChar() {
+    return this.chars[Math.floor(Math.random() * this.chars.length)];
+  }
+}
+
+let scramble_timeout;
+
+function text_macro(texts, id, freq, index) {
+        var html = "";
+    
+          d3.select("#text_stuff").append("span").attr("id", id).html(html);
+      
+
+        const phrases = texts;
+
+        window.clearTimeout(scramble_timeout);
+        const el = document.getElementById(id);
+        const fx = new Locutor_TextScramble(el);
+
+
+        if (freq == "once") {
+          let counter = 0;
+          var next = () => {
+            fx.setText(phrases[counter]).then(() => {
+              var scramble_timeout = setTimeout("", 3000);
+            });
+             counter = (counter + 1) % phrases.length;
+          };
+
+          next();
+        } else {
+          let counter = 0;
+          var next = () => {
+            fx.setText(phrases[counter]).then(() => {
+              var scramble_timeout = setTimeout(next, 1000);
+            });
+            counter = (counter + 1) % phrases.length;
+          };
+
+          next();
+        }
+      }
+
+text_macro(["Design.", "AI.", "Machine Learning." ,"Prototype.","Front End.", "Data Science.", "Cats."], 1)
+
 async function launch(data) {
 
 
@@ -39,11 +134,11 @@ data = [
 // data = d3.shuffle(data);
 // console.log(data);
 
-var height = 800,
-    imageWidth = 140,
-    imageHeight = 140,
+var height = 900,
+    imageWidth = 130,
+    imageHeight = 130,
     radius = 45,
-    depth = 4;
+    depth = 2;
 
 var currentFocus = [innerWidth / 2, height / 2],
     desiredFocus,
@@ -116,7 +211,7 @@ function resized() {
   var deepWidth = innerWidth * (depth + 1) / depth,
       deepHeight = height * (depth + 1) / depth,
       centers = hex.size([deepWidth, deepHeight]).centers();
-  console.log("Number of drawn centers:", centers.length);
+  // console.log("Number of drawn centers:", centers.length);
   desiredFocus = [innerWidth / 2, height / 2];
   moved();
   // Calculate the center of the grid
@@ -160,7 +255,7 @@ centers.forEach((center, i) => {
     context.translate(Math.round(center[0]), Math.round(center[1]));
     drawImage(center.example);
     const dist = Math.hypot(center[0] - gridCenter[0], center[1] - gridCenter[1]);
-    center.opacity = 0.2 + 0.8 * (1 - dist / maxDist);   console.log(`Center ${i} at (${center[0]}, ${center[1]}) has opacity ${center.opacity}`);
+    center.opacity = 0.2 + 0.8 * (1 - dist / maxDist);
     context.restore();
     
   }
@@ -174,7 +269,7 @@ centers.forEach((center, i) => {
   anchor.exit().remove();
 
   var anchorEnter = anchor.enter().append("a")
-      .attr("xlink:title", function(d) { return d.example.title; });
+      // .attr("xlink:title", function(d) { return d.example.title; });
 
   // Define hexagonal clip path once
   if (svg.select("clipPath#hex-clip").empty()) {
@@ -189,7 +284,7 @@ centers.forEach((center, i) => {
       .attr("d", hex.hexagon())
       .attr("class", "example-anchor-border")
       .attr("fill", "none")
-      .attr("stroke", "white")
+      .attr("stroke", "magenta")
       .attr("stroke-width", 4);
 
   anchorEnter
@@ -220,14 +315,26 @@ function mousemoved(event) {
 // Create a search bar at the top right of the page
 var searchBar = d3.select("body").append("input")
   .attr("type", "text")
-  .attr("placeholder", "Search...")
+  .attr("placeholder", "Search by year, technology, language, etc.")
   .style("position", "fixed")
-  .style("top", "10px")
-  .style("right", "10px")
-  .style("padding", "5px")
+  .style("top", "150px")
+  .style("left", "50%")
+  .style("transform", "translateX(-50%)")
+  .style("width", "300px")
+  .style("padding", "8px 12px")
   .style("z-index", "1000")
-  .style("border", "1px solid #ccc")
-  .style("border-radius", "4px");
+  .style("border", "1px solid magenta")
+  .style("border-radius", "4px")
+  .style("color", "magenta")
+  .style("caret-color", "magenta");
+
+// Set placeholder text color to magenta using CSS
+d3.select("head").append("style").html(`
+  input::placeholder {
+    color: magenta !important;
+    opacity: 1;
+  }
+`);
 
 // Add an event listener for the search bar
 searchBar.on("input", function() {
@@ -250,12 +357,12 @@ anchor.on("click", function(event, d) {
     tab = d3.select("body").append("div")
       .attr("class", "image-tab")
       .style("position", "fixed")
-      .style("top", "0")
+      .style("top", "50")
       .style("right", "-100%")
       .style("width", "300px")
-      .style("height", "100%")
-      .style("background", "white")
-      .style("box-shadow", "-2px 0 5px rgba(0,0,0,0.3)")
+      .style("max-height", "100%")
+      .style("background", "rgba(255,255,255,0.6)")
+      .style("box-shadow", "-2px 0 5px rgba(255, 0, 251, 0.3)")
       .style("overflow", "auto")
       .style("z-index", "1000")
       .style("padding", "20px")
@@ -426,7 +533,7 @@ anchor.on("mouseover", function() {
   this.parentNode.appendChild(this);
 }).on("mouseout", function() {
   d3.select(this).select(".example-anchor-border")
-     .attr("stroke", "white")
+     .attr("stroke", "magenta")
   // Scale back to normal
   d3.select(this)
     .transition()
