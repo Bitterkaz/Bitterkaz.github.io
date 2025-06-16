@@ -283,8 +283,8 @@ centers.forEach((center, i) => {
     .append("path") // White border hexagon
       .attr("d", hex.hexagon())
       .attr("class", "example-anchor-border")
-      .style("fill", "#CB57DD")
-      .attr("stroke", "#CB57DD")
+      .style("fill", "#DC4DE4")
+      .attr("stroke", "#DC4DE4")
       .attr("stroke-width", 4);
 
   anchorEnter
@@ -533,7 +533,7 @@ anchor.on("mouseover", function() {
   this.parentNode.appendChild(this);
 }).on("mouseout", function() {
   d3.select(this).select(".example-anchor-border")
-     .attr("stroke", "#CB57DD")
+     .attr("stroke", "#DC4DE4")
   // Scale back to normal
   d3.select(this)
     .transition()
@@ -543,6 +543,21 @@ anchor.on("mouseover", function() {
     });
 });
 
+
+  // Attach click handler to the gif div
+  d3.selectAll("#eyes_gif").on("click", function() {
+    // Get the bounding box of the clicked gif
+    console.log("Clicked on eyes gif");
+    const rect = this.getBoundingClientRect();
+    // Create a new img for the blink gif
+d3.select("#eyes_gif_img")
+  .attr("src", "data/blink.gif");  // Remove the blink gif after it finishes (assuming blink.gif is short, e.g. 1s)
+    // If you know the duration, set it here (e.g. 1000ms)
+    setTimeout(() => {
+    d3.select("#eyes_gif_img")
+  .attr("src", "data/crop2.gif"); 
+    }, 2000);
+  });
 
 function moved() {
  
